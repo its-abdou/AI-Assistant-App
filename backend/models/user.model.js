@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import validator from "validator";
+import bcrypt from "bcrypt";
+import { AuthError, ValidationError } from "../utils/error.js";
 
 const UserSchema = new mongoose.Schema({
   email: {
@@ -45,4 +48,39 @@ UserSchema.pre("save", function (next) {
   next();
 });
 
-export default mongoose.model("User", UserSchema);
+UserSchema.statics.signup = async function (email, password, fullName) {
+  // Validate inputs
+  if (!fullName || !email || !password) {
+    throw new ValidationError("Please fill all fields");
+  }
+
+  if (!validator.isEmail(email)) {
+    throw new ValidationError("Please enter a valid email");
+  }
+
+  if (!validator.isStrongPassword(password)) {
+    throw new ValidationError("Please enter a strong password");
+  }
+
+  // Check for existing user
+  const existingUser = await this.findOne({ email });
+  if (existingUser) {
+    throw new AuthError("User already exists");
+  }
+
+  // Hash password
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash(password, salt);
+
+  const user = await this.create({
+    fullName,
+    email,
+    password: hashedPassword,
+  });
+
+  return user;
+};
+
+const User = mongoose.model("User", UserSchema);
+
+export default User;
