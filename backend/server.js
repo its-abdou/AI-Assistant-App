@@ -8,6 +8,7 @@ import connectMongodb from "./db/connectMongodb.js";
 
 // Routes
 import authRoutes from "./routes/auth.routes.js";
+import userRoutes from "./routes/user.routes.js";
 
 // Config
 const PORT = process.env.PORT || 8000;
@@ -22,6 +23,7 @@ app.use(cors());
 
 //routes
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/user", userRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server is running on Port ${PORT}`);
