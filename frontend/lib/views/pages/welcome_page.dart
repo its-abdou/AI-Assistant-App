@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:frontend/views/pages/login_page.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -17,13 +18,8 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   Widget build(BuildContext context) {
     return  Scaffold(
-      appBar: AppBar(
-        title: Text('Test'),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Image.asset("assets/images/test.jpeg"),
-      ),
+
+      body: LoginPage(),
     );
   }
 }
