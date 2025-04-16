@@ -1,27 +1,48 @@
+// lib/views/pages/welcome_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/views/pages/login_page.dart';
-
+import 'package:frontend/views/pages/profile_page.dart';
 import 'package:frontend/views/pages/signUp_page.dart';
 import 'package:frontend/views/widgets/build_dot.dart';
+import 'package:frontend/providers/auth_providers.dart';
 
-class WelcomePage extends StatefulWidget {
+class WelcomePage extends ConsumerStatefulWidget {
   const WelcomePage({super.key});
 
   @override
-  State<WelcomePage> createState() => _WelcomePageState();
+  ConsumerState<WelcomePage> createState() => _WelcomePageState();
 }
 
-class _WelcomePageState extends State<WelcomePage> {
+class _WelcomePageState extends ConsumerState<WelcomePage> {
   @override
   void initState() {
     FlutterNativeSplash.remove();
+
+    // Check if user is already authenticated
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAuthentication();
+    });
+
     super.initState();
   }
+
+  Future<void> _checkAuthentication() async {
+    final authRepo = ref.read(authRepositoryProvider);
+    final isAuthenticated = await authRepo.isAuthenticated();
+
+    if (isAuthenticated && mounted) {
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => ProfilePage())
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       body: Stack(
         children: [
@@ -57,10 +78,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   const SizedBox(height: 200),
 
                   // App logo
-                  Image(height: 160,
-                      image: AssetImage(TImages.logo)),
-
-
+                  Image(height: 160, image: AssetImage(TImages.logo)),
 
                   // Headline text
                   FittedBox(
@@ -103,7 +121,10 @@ class _WelcomePageState extends State<WelcomePage> {
                   // Login button
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) =>LoginPage() ,));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => LoginPage())
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.white,
@@ -127,7 +148,10 @@ class _WelcomePageState extends State<WelcomePage> {
                   // Register button
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => SignupPage(),));
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => SignupPage())
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.deepPurple,
@@ -156,4 +180,3 @@ class _WelcomePageState extends State<WelcomePage> {
     );
   }
 }
-
