@@ -1,4 +1,12 @@
 class TTexts{
+  // -- GLOBAL Texts
+  static const String and = "and";
+  static const String skip = "Skip";
+  static const String done = "Done";
+  static const String submit = "Submit";
+  static const String appName = "T-Store";
+  static const String tContinue = "Continue";
+
   // -- Authentication Headings
   static const String loginTitle = "Welcome back,";
   static const String loginSubTitle = "Discover Limitless Choices and Unmatched Convenience.";
@@ -14,8 +22,7 @@ class TTexts{
   static const String yourAccountCreatedSubTitle = "Welcome to Your Ultimate Shopping Destination: Your Account is Created, Unleash the Joy of Seamless Online Shopping!";
 
   // -- Authentication Forms
-  static const String firstName = "First Name";
-  static const String lastName = "Last Name";
+  static const String fullName = "Full Name";
   static const String email = "E-Mail";
   static const String password = "Password";
   static const String newPassword = "New Password";

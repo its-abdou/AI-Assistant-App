@@ -1,63 +1,64 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/utils/constants/colors.dart';
-import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
-import 'package:frontend/views/widgets/form_divider.dart';
 import 'package:iconsax/iconsax.dart';
 
+import '../widgets/form_divider.dart';
 import '../widgets/google_sign_in_button.dart';
 
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+class SignupPage extends StatefulWidget {
+  const SignupPage({super.key});
 
   @override
-  State<LoginPage> createState() => _LoginPageState();
+  State<SignupPage> createState() => _SignupPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
-  bool? isChecked = false;
+class _SignupPageState extends State<SignupPage> {
   TextEditingController controllerEmail = TextEditingController();
   TextEditingController controllerPass = TextEditingController();
+  TextEditingController controllerName = TextEditingController();
+  bool? isChecked= false;
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
+      appBar: AppBar(),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(
-            top: TSizes.appBarHeight,
-            left: TSizes.defaultSpace,
-            right: TSizes.defaultSpace,
-            bottom: TSizes.defaultSpace,
-          ),
+          padding: const EdgeInsets.all(TSizes.defaultSpace),
           child: Column(
-            children: [
-              Column(
-                //logo , Header , subHeader
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Image(height: 150, image: AssetImage(TImages.logo)),
-                  Text(
-                    TTexts.loginTitle,
-                    style: TTextTheme.darkTextTheme.headlineMedium,
-                  ),
-                  SizedBox(height: TSizes.sm),
-                  Text(
-                    TTexts.loginSubTitle,
-                    style: TTextTheme.darkTextTheme.bodyMedium,
-                  ),
-                ],
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              SizedBox(height: TSizes.spaceBtwSections),
+              // Title
+              Text(
+                TTexts.signupTitle,
+                style: TTextTheme.darkTextTheme.headlineMedium,
               ),
-              // Form
+              SizedBox(height: TSizes.spaceBtwSections),
+
               Padding(
                 padding: const EdgeInsets.symmetric(
                   vertical: TSizes.spaceBtwSections,
                 ),
                 child: Form(
                   child: Column(
-                    children: <Widget>[
-                      // email
+                    children: [
+                      //fullName
+                      TextField(
+                        controller: controllerName,
+                        decoration: InputDecoration(
+                          hintText: TTexts.fullName,
+                          prefixIcon: Icon(Iconsax.user),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: TSizes.spaceBtwItems),
+
                       TextField(
                         controller: controllerEmail,
                         decoration: InputDecoration(
@@ -69,9 +70,9 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                       SizedBox(height: TSizes.spaceBtwItems),
-                      //password
+
                       TextField(
-                        obscureText: true ,
+                        obscureText: true,
                         controller: controllerPass,
                         decoration: InputDecoration(
                           hintText: TTexts.password,
@@ -81,19 +82,32 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                       ),
-                      SizedBox(height: TSizes.spaceBtwItems / 2),
-                      // Remember ME
+                      SizedBox(height: TSizes.spaceBtwSections),
+
                       Row(
                         children: [
-                          Checkbox(
-                            value: isChecked,
-                            activeColor: TColors.primary,
-                            onChanged:
-                                (bool? value) => setState(() {
-                                  isChecked = value;
-                                }),
+                          SizedBox(
+                            width:24,
+                            height: 24,
+                           child:  Checkbox(
+                             value: isChecked,
+                             activeColor: TColors.primary,
+                              onChanged:
+                                  (bool? value) => setState(() {
+                                isChecked = value;
+                              }),
+                            ),
                           ),
-                          Text(TTexts.rememberMe),
+                          SizedBox(width: TSizes.spaceBtwItems),
+                          Text.rich(
+                            TextSpan(children: [
+                              TextSpan(text: '${TTexts.iAgreeTo} ', style: TTextTheme.darkTextTheme.bodySmall),
+                              TextSpan(text: '${TTexts.privacyPolicy}', style: TTextTheme.darkTextTheme.bodyMedium!.apply(color: TColors.white, decoration: TextDecoration.underline, decorationColor: TColors.white)),
+
+                              TextSpan(text: '  ${TTexts.and} ', style: TTextTheme.darkTextTheme.bodySmall),
+                              TextSpan(text: '${TTexts.termsOfUse}', style: TTextTheme.darkTextTheme.bodyMedium!.apply(color: TColors.white, decoration: TextDecoration.underline, decorationColor: TColors.white)),
+                            ])
+                          ),
                         ],
                       ),
                       SizedBox(height: TSizes.spaceBtwSections),
@@ -121,20 +135,19 @@ class _LoginPageState extends State<LoginPage> {
                             ),
 
                           ),
-                          child: Text(TTexts.signIn),
+                          child: Text(TTexts.createAccount),
                         ),
+                      ),
+                      SizedBox(height: TSizes.spaceBtwSections),
+                      FormDivider(),// Your "or sign in with" text
+                      SizedBox(height: TSizes.spaceBtwSections),
+                      GoogleSignInButton(
+                        onPressed: () {
+                        },
                       ),
                     ],
                   ),
                 ),
-              ),
-
-              //Divider
-              FormDivider(),// Your "or sign in with" text
-              SizedBox(height: TSizes.spaceBtwSections),
-              GoogleSignInButton(
-                onPressed: () {
-                },
               ),
             ],
           ),
