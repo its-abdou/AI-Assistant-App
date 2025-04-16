@@ -4,6 +4,7 @@ import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
+import 'package:frontend/views/pages/profile_page.dart';
 import 'package:frontend/views/widgets/form_divider.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -23,14 +24,11 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.only(
-            top: TSizes.appBarHeight,
-            left: TSizes.defaultSpace,
-            right: TSizes.defaultSpace,
-            bottom: TSizes.defaultSpace,
-          ),
+          padding: const EdgeInsets.all(20),
+
           child: Column(
             children: [
               Column(
@@ -71,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(height: TSizes.spaceBtwItems),
                       //password
                       TextField(
-                        obscureText: true ,
+                        obscureText: true,
                         controller: controllerPass,
                         decoration: InputDecoration(
                           hintText: TTexts.password,
@@ -100,7 +98,15 @@ class _LoginPageState extends State<LoginPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ProfilePage(),
+                              ),
+                              (route) => false,
+                            );
+                          },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
                             foregroundColor: TColors.light,
@@ -119,7 +125,6 @@ class _LoginPageState extends State<LoginPage> {
                                 TSizes.buttonRadius,
                               ),
                             ),
-
                           ),
                           child: Text(TTexts.signIn),
                         ),
@@ -130,12 +135,9 @@ class _LoginPageState extends State<LoginPage> {
               ),
 
               //Divider
-              FormDivider(),// Your "or sign in with" text
+              FormDivider(), // Your "or sign in with" text
               SizedBox(height: TSizes.spaceBtwSections),
-              GoogleSignInButton(
-                onPressed: () {
-                },
-              ),
+              GoogleSignInButton(onPressed: () {}),
             ],
           ),
         ),

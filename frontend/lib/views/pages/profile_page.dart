@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
-import 'package:frontend/views/pages/login_page.dart';
+import 'package:frontend/views/pages/welcome_page.dart';
 import 'package:frontend/views/widgets/profile_menu.dart';
 import 'package:iconsax/iconsax.dart';
 
@@ -56,7 +56,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 SizedBox(height: TSizes.spaceBtwSections,),
                 Center(
                   child:   TextButton(onPressed: (){
-                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage(),));
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => WelcomePage(),));
                   }, child: Text(TTexts.logout, style: TextStyle(color: Colors.red),)),
                 )
 
