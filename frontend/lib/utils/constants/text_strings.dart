@@ -31,6 +31,7 @@ class TTexts{
   static const String rememberMe = "Remember Me";
   static const String forgetPassword = "Forget Password?";
   static const String signIn = "Sign In";
+  static const String logout = "Log Out";
   static const String createAccount = "Create Account";
   static const String orSignInWith = "Or Sign In With";
   static const String orSignUpWith = "or sign up with";
@@ -40,4 +41,6 @@ class TTexts{
   static const String verificationCode = "verificationCode";
   static const String resendEmail = "Resend Email";
   static const String resendEmailIn = "Resend email in";
+
+  static const changePfp = "Change Profile Picture";
 }

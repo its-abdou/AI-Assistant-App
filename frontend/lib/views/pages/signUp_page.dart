@@ -3,6 +3,7 @@ import 'package:frontend/utils/constants/colors.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
+import 'package:frontend/views/pages/profile_page.dart';
 import 'package:iconsax/iconsax.dart';
 
 import '../widgets/form_divider.dart';
@@ -114,7 +115,9 @@ class _SignupPageState extends State<SignupPage> {
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => ProfilePage()),(route) => false,);
+                          },
                           style: ElevatedButton.styleFrom(
                             elevation: 0,
                             foregroundColor: TColors.light,
