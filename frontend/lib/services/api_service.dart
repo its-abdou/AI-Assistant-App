@@ -1,4 +1,3 @@
-
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -15,8 +14,11 @@ class ApiService {
 
     if (requiresAuth) {
       final token = await secureStorage.read(key: 'token');
+      print('Using token: $token');
       if (token != null) {
         headers['Authorization'] = 'Bearer $token';
+      } else {
+        print('Warning: No token found, but requiresAuth is true');
       }
     }
 
@@ -66,14 +68,22 @@ class ApiService {
   }) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
+      print('PUT Request to: $baseUrl/$endpoint');
+      print('Headers: $headers');
+      print('Body: ${jsonEncode(data)}');
+
       final response = await http.put(
         Uri.parse('$baseUrl/$endpoint'),
         headers: headers,
         body: jsonEncode(data),
       );
 
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
+
       return _processResponse(response);
     } catch (e) {
+      print('Error in PUT request: $e');
       throw Exception('Failed to perform PUT request: $e');
     }
   }
@@ -108,10 +118,16 @@ class ApiService {
   Future<dynamic> delete(String endpoint, {bool requiresAuth = true}) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
+      print('DELETE Request to: $baseUrl/$endpoint');
+      print('Headers: $headers');
+
       final response = await http.delete(
         Uri.parse('$baseUrl/$endpoint'),
         headers: headers,
       );
+
+      print('Response status: ${response.statusCode}');
+      print('Response body: ${response.body}');
 
       // For 204 No Content responses, return empty success response
       if (response.statusCode == 204) {
@@ -120,6 +136,7 @@ class ApiService {
 
       return _processResponse(response);
     } catch (e) {
+      print('Error in DELETE request: $e');
       throw Exception('Failed to perform DELETE request: $e');
     }
   }
