@@ -6,6 +6,7 @@ import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
+import 'package:frontend/views/pages/chat_page.dart';
 import 'package:frontend/views/pages/previous_chats_page.dart';
 import 'package:frontend/views/pages/profile_page.dart';
 import 'package:frontend/views/widgets/form_divider.dart';
@@ -48,19 +49,16 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     });
 
     try {
-      await ref.read(authProvider.notifier).login(
-        controllerEmail.text.trim(),
-        controllerPass.text,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .login(controllerEmail.text.trim(), controllerPass.text);
 
       // On successful login, navigate to profile page
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const PreviousChatsPage(),
-          ),
-              (route) => false,
+          MaterialPageRoute(builder: (context) => const ChatPage()),
+          (route) => false,
         );
       }
     } catch (e) {
@@ -139,8 +137,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                             activeColor: TColors.primary,
                             onChanged:
                                 (bool? value) => setState(() {
-                              isChecked = value;
-                            }),
+                                  isChecked = value;
+                                }),
                           ),
                           Text(TTexts.rememberMe),
                         ],
@@ -178,9 +176,12 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               ),
                             ),
                           ),
-                          child: _isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
-                              : Text(TTexts.signIn),
+                          child:
+                              _isLoading
+                                  ? CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : Text(TTexts.signIn),
                         ),
                       ),
                     ],

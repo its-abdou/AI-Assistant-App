@@ -1,4 +1,3 @@
-
 // lib/views/pages/previous_chats_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
@@ -21,6 +20,8 @@ class PreviousChatsPage extends ConsumerStatefulWidget {
 }
 
 class _PreviousChatsPageState extends ConsumerState<PreviousChatsPage> {
+  bool isNetworkImage = false;
+  String image = TImages.user;
   @override
   void initState() {
     FlutterNativeSplash.remove();
@@ -40,33 +41,65 @@ class _PreviousChatsPageState extends ConsumerState<PreviousChatsPage> {
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            if (currentId != null) {
-              conversationsState.whenData((list) {
+            if (currentId == null) return; // If no currentId, do nothing
+
+            // Access the state safely
+            final conversations = ref.read(conversationsProvider);
+            conversations.when(
+              data: (list) {
                 final conv = list.firstWhere((c) => c.id == currentId);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
-                    builder: (_) => ChatPage(
-                      initialConversationId: conv.id,
-                      initialTitle: conv.title,
-                    ),
+                    builder:
+                        (_) => ChatPage(
+                          initialConversationId: conv.id,
+                          initialTitle: conv.title,
+                        ),
                   ),
                 );
-              });
-            }
+              },
+              loading: () {
+                // Optionally show a loading indicator or disable the button
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Loading conversations...')),
+                );
+              },
+              error: (e, _) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error loading conversations: $e')),
+                );
+              },
+            );
           },
         ),
 
         title: const Text('Conversations'),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()),
-              );
-            },
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: TSizes.md),
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProfilePage()),
+                );
+              },
+              child: Container(
+                height: 50,
+                width: 50,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  image: DecorationImage(
+                    image:
+                        isNetworkImage
+                            ? NetworkImage(image)
+                            : AssetImage(image) as ImageProvider,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -89,16 +122,19 @@ class _PreviousChatsPageState extends ConsumerState<PreviousChatsPage> {
               itemBuilder: (context, index) {
                 final conversation = conversations[index];
                 return ConversationCard(
-                  conversationData: ConversationData.fromConversation(conversation),
+                  conversationData: ConversationData.fromConversation(
+                    conversation,
+                  ),
                   onMenuPressed: () => _showBottomMenu(context, conversation),
                   onTap: () {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                        builder: (_) => ChatPage(
-                          initialConversationId: conversation.id,
-                          initialTitle: conversation.title,
-                        ),
+                        builder:
+                            (_) => ChatPage(
+                              initialConversationId: conversation.id,
+                              initialTitle: conversation.title,
+                            ),
                       ),
                     );
                   },

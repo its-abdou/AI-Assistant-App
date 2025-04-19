@@ -12,13 +12,13 @@ class AuthRepository {
   // Sign up a new user
   Future<User> signup(String fullName, String email, String password) async {
     try {
-      final data = {
-        'fullName': fullName,
-        'email': email,
-        'password': password,
-      };
+      final data = {'fullName': fullName, 'email': email, 'password': password};
 
-      final response = await _apiService.post('auth/signup', data, requiresAuth: false);
+      final response = await _apiService.post(
+        'auth/signup',
+        data,
+        requiresAuth: false,
+      );
       final user = User.fromJson(response);
 
       // Save token
@@ -36,12 +36,13 @@ class AuthRepository {
   // Log in user
   Future<User> login(String email, String password) async {
     try {
-      final data = {
-        'email': email,
-        'password': password,
-      };
+      final data = {'email': email, 'password': password};
 
-      final response = await _apiService.post('auth/login', data, requiresAuth: false);
+      final response = await _apiService.post(
+        'auth/login',
+        data,
+        requiresAuth: false,
+      );
       final user = User.fromJson(response);
 
       // Save token
@@ -59,7 +60,7 @@ class AuthRepository {
   // Get current user profile
   Future<User> getUserProfile() async {
     try {
-      final response = await _apiService.get('users/profile');
+      final response = await _apiService.get('user/profile');
       return User.fromJson(response);
     } catch (e) {
       throw Exception('Failed to get user profile: $e');
@@ -69,7 +70,7 @@ class AuthRepository {
   // Update user profile
   Future<User> updateProfile(Map<String, dynamic> profileData) async {
     try {
-      final response = await _apiService.put('users/profile', profileData);
+      final response = await _apiService.put('user/profile', profileData);
       final updatedUser = User.fromJson(response['updatedUser']);
       await _saveUserToPrefs(updatedUser);
       return updatedUser;

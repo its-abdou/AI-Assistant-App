@@ -62,16 +62,19 @@ class ConversationsNotifier
       final updatedConversation = await _conversationRepository
           .updateConversation(id, title);
 
-      // Update state with the updated conversation
-      state.whenData((conversations) {
+      // Update the state directly
+      final currentState = state;
+      if (currentState is AsyncData<List<Conversation>>) {
         final updatedList =
-            conversations
+            currentState.value
                 .map((conv) => conv.id == id ? updatedConversation : conv)
                 .toList();
         state = AsyncValue.data(updatedList);
-      });
+      } else {
+        // If state is not in data state, fetch conversations to refresh
+        await fetchConversations();
+      }
     } catch (e) {
-      // Don't update state on error
       rethrow;
     }
   }
@@ -80,14 +83,17 @@ class ConversationsNotifier
     try {
       await _conversationRepository.deleteConversation(id);
 
-      // Remove the conversation from state
-      state.whenData((conversations) {
+      // Update the state directly
+      final currentState = state;
+      if (currentState is AsyncData<List<Conversation>>) {
         final updatedList =
-            conversations.where((conv) => conv.id != id).toList();
+            currentState.value.where((conv) => conv.id != id).toList();
         state = AsyncValue.data(updatedList);
-      });
+      } else {
+        // If state is not in data state, fetch conversations to refresh
+        await fetchConversations();
+      }
     } catch (e) {
-      // Don't update state on error
       rethrow;
     }
   }

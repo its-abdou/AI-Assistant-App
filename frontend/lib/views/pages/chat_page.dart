@@ -1,5 +1,6 @@
 // lib/views/pages/chat_page.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:frontend/models/message_model.dart';
 import 'package:frontend/providers/conversation_providers.dart';
@@ -11,7 +12,8 @@ class ChatPage extends ConsumerStatefulWidget {
   final String? initialConversationId;
   final String? initialTitle;
 
-  const ChatPage({Key? key, this.initialConversationId, this.initialTitle}) : super(key: key);
+  const ChatPage({Key? key, this.initialConversationId, this.initialTitle})
+    : super(key: key);
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -28,12 +30,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize if navigated from existing conversation
     if (widget.initialConversationId != null) {
       _conversationId = widget.initialConversationId;
       _conversationTitle = widget.initialTitle ?? 'Chat';
-      ref.read(currentConversationProvider.notifier).state = _conversationId;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(currentConversationProvider.notifier).state = _conversationId;
+      });
     }
+    FlutterNativeSplash.remove();
   }
 
   @override
@@ -46,7 +50,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   Future<void> _startConversation(String firstMessage) async {
     setState(() => _isCreating = true);
     try {
-      final convo = await ref.read(conversationsProvider.notifier)
+      final convo = await ref
+          .read(conversationsProvider.notifier)
           .createConversation('New Conversation');
       _conversationId = convo.id;
       _conversationTitle = convo.title;
@@ -57,8 +62,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           .sendMessage(firstMessage);
       _scrollToBottom();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
+      if (mounted) print('');
     } finally {
       setState(() => _isCreating = false);
     }
@@ -83,8 +87,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           .sendMessage(message);
       _scrollToBottom();
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+      if (mounted) print('');
     } finally {
       setState(() => _isSending = false);
     }
@@ -110,15 +113,16 @@ class _ChatPageState extends ConsumerState<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = _conversationId != null
-        ? ref.watch(messagesProvider(_conversationId!))
-        : const AsyncValue<List<Message>>.data([]);
+    final messagesAsync =
+        _conversationId != null
+            ? ref.watch(messagesProvider(_conversationId!))
+            : const AsyncValue<List<Message>>.data([]);
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: (){
+          onPressed: () {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (_) => const PreviousChatsPage()),
@@ -160,9 +164,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
-                        mainAxisAlignment: isUser
-                            ? MainAxisAlignment.end
-                            : MainAxisAlignment.start,
+                        mainAxisAlignment:
+                            isUser
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
                         children: [
                           if (!isUser)
                             const CircleAvatar(
@@ -174,15 +179,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isUser
-                                    ? TColors.primary
-                                    : const Color(0xFF1A1A1C),
+                                color:
+                                    isUser
+                                        ? TColors.primary
+                                        : const Color(0xFF1A1A1C),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
                                 msg.content,
                                 style: TextStyle(
-                                  color: isUser ? Colors.white : Colors.grey[200],
+                                  color:
+                                      isUser ? Colors.white : Colors.grey[200],
                                 ),
                               ),
                             ),
@@ -244,16 +251,17 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
                   child: IconButton(
                     onPressed: _sendMessage,
-                    icon: _isCreating || _isSending
-                        ? const SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                        : const Icon(Icons.send, color: Colors.white),
+                    icon:
+                        _isCreating || _isSending
+                            ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(Icons.send, color: Colors.white),
                   ),
                 ),
               ],

@@ -5,7 +5,7 @@ import '../repositories/auth_repository.dart';
 import '../services/api_service.dart';
 
 // Environment configuration - replace with your backend URL
-final apiUrlProvider = Provider((ref) => 'http://10.0.2.2:5000/api/v1');
+final apiUrlProvider = Provider((ref) => 'http://10.0.2.2:3000/api/v1');
 
 // API Service provider
 final apiServiceProvider = Provider((ref) {
@@ -108,7 +108,9 @@ class AuthNotifier extends StateNotifier<AsyncValue<User?>> {
 }
 
 // Auth state provider
-final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((ref) {
+final authProvider = StateNotifierProvider<AuthNotifier, AsyncValue<User?>>((
+  ref,
+) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthNotifier(authRepository);
 });
