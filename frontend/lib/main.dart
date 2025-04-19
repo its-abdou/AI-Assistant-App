@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:frontend/providers/auth_providers.dart';
 import 'package:frontend/styles/constants.dart';
+import 'package:frontend/views/pages/new_chat_page.dart';
 import 'package:frontend/views/pages/profile_page.dart';
 import 'package:frontend/views/pages/welcome_page.dart';
 
@@ -39,7 +40,7 @@ class MyApp extends ConsumerWidget {
           body: Center(child: CircularProgressIndicator()),
         ),
         error: (error, _) => const WelcomePage(),
-        data: (user) => user != null ? const ProfilePage() : const WelcomePage(),
+        data: (user) => user != null ? const NewChatPage() : const WelcomePage(),
       ),
     );
   }

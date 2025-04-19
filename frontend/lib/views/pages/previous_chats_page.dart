@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:frontend/models/conversation_model.dart';
+import 'package:frontend/providers/conversation_providers.dart';
+import 'package:frontend/views/pages/new_chat_page.dart';
 import 'package:frontend/views/pages/profile_page.dart';
 
 import '../../utils/constants/image_strings.dart';
@@ -8,59 +12,49 @@ import '../../utils/themes/text_thems.dart';
 import '../widgets/bottom_menu_widget.dart';
 import '../widgets/conversation_card.dart';
 
-class PreviousChatsPage extends StatefulWidget {
+class PreviousChatsPage extends ConsumerStatefulWidget {
   const PreviousChatsPage({super.key});
 
   @override
-  State<PreviousChatsPage> createState() => _PreviousChatsPageState();
+  ConsumerState<PreviousChatsPage> createState() => _PreviousChatsPageState();
 }
 
-class _PreviousChatsPageState extends State<PreviousChatsPage> {
+class _PreviousChatsPageState extends ConsumerState<PreviousChatsPage> {
   bool isNetworkImage = false;
   String image = TImages.user;
-  final List<ConversationData> conversations = [
-    ConversationData(
-      date: 'Tuesday, Apr 15',
-      title: 'Creating a Flutter App Theme',
-    ),
-    ConversationData(
-      date: 'Monday, Apr 14',
-      title: 'Firefighting Scene Description',
-    ),
-    ConversationData(
-      date: 'Sunday, Apr 13',
-      title: 'Simple Java Code Example',
-    ),
-    ConversationData(
-      date: 'Saturday, Apr 12',
-      title: 'Morning Greetings and Assignments',
-    ),
-    ConversationData(
-      date: 'Thursday, Apr 10',
-      title: 'Anime Photo Generation Request',
-    ),
-    ConversationData(
-      date: 'Wednesday, Mar 26',
-      title: 'Roadmap to Becoming a Backend Developer',
-    ),
-  ];
 
   @override
   void initState() {
     FlutterNativeSplash.remove();
     super.initState();
+
+    // Refresh conversations list when page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(conversationsProvider.notifier).fetchConversations();
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    final conversationsState = ref.watch(conversationsProvider);
+
     return Scaffold(
       appBar: AppBar(
         actions: [
+          IconButton(
+            icon: const Icon(Icons.add),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NewChatPage()),
+              );
+            },
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: TSizes.md),
             child: GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => ProfilePage()));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfilePage()));
               },
               child: Container(
                 height: 50,
@@ -92,14 +86,34 @@ class _PreviousChatsPageState extends State<PreviousChatsPage> {
             ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView.builder(
-                itemCount: conversations.length,
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                itemBuilder: (context, index) {
-                  return ConversationCard(
-                    conversationData: conversations[index],
-                    onMenuPressed: () {
-                      _showBottomMenu(context);
+              child: conversationsState.when(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stack) => Center(
+                  child: Text('Error: ${error.toString()}'),
+                ),
+                data: (conversations) {
+                  if (conversations.isEmpty) {
+                    return const Center(
+                      child: Text(
+                        'No conversations yet. Start a new chat!',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                    );
+                  }
+
+                  return ListView.builder(
+                    itemCount: conversations.length,
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    itemBuilder: (context, index) {
+                      final conversation = conversations[index];
+                      final conversationData = ConversationData.fromConversation(conversation);
+
+                      return ConversationCard(
+                        conversationData: conversationData,
+                        onMenuPressed: () {
+                          _showBottomMenu(context, conversation);
+                        },
+                      );
                     },
                   );
                 },
@@ -108,14 +122,24 @@ class _PreviousChatsPageState extends State<PreviousChatsPage> {
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const NewChatPage()),
+          );
+        },
+        backgroundColor: Theme.of(context).primaryColor,
+        child: const Icon(Icons.add, color: Colors.white),
+      ),
     );
   }
 
-  void _showBottomMenu(BuildContext context) {
+  void _showBottomMenu(BuildContext context, Conversation conversation) {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF1A1A1C),
-      builder: (context) => const BottomMenuWidget(),
+      builder: (context) => BottomMenuWidget(conversation: conversation),
     );
   }
 }
