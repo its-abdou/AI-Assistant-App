@@ -6,6 +6,7 @@ import 'package:frontend/utils/constants/image_strings.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
+import 'package:frontend/views/pages/previous_chats_page.dart';
 import 'package:frontend/views/pages/profile_page.dart';
 import 'package:frontend/views/widgets/form_divider.dart';
 import 'package:iconsax/iconsax.dart';
@@ -57,7 +58,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => const ProfilePage(),
+            builder: (context) => const PreviousChatsPage(),
           ),
               (route) => false,
         );

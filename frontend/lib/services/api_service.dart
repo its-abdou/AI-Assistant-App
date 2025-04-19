@@ -1,6 +1,5 @@
-// lib/services/api_service.dart
+
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -12,9 +11,7 @@ class ApiService {
 
   // Helper method to get the authorization header
   Future<Map<String, String>> _getHeaders({bool requiresAuth = true}) async {
-    Map<String, String> headers = {
-      'Content-Type': 'application/json',
-    };
+    Map<String, String> headers = {'Content-Type': 'application/json'};
 
     if (requiresAuth) {
       final token = await secureStorage.read(key: 'token');
@@ -42,7 +39,11 @@ class ApiService {
   }
 
   // Generic POST request
-  Future<dynamic> post(String endpoint, dynamic data, {bool requiresAuth = true}) async {
+  Future<dynamic> post(
+    String endpoint,
+    dynamic data, {
+    bool requiresAuth = true,
+  }) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
       final response = await http.post(
@@ -58,7 +59,11 @@ class ApiService {
   }
 
   // Generic PUT request
-  Future<dynamic> put(String endpoint, dynamic data, {bool requiresAuth = true}) async {
+  Future<dynamic> put(
+    String endpoint,
+    dynamic data, {
+    bool requiresAuth = true,
+  }) async {
     try {
       final headers = await _getHeaders(requiresAuth: requiresAuth);
       final response = await http.put(
@@ -98,5 +103,24 @@ class ApiService {
   Future<bool> hasToken() async {
     final token = await secureStorage.read(key: 'token');
     return token != null;
+  }
+
+  Future<dynamic> delete(String endpoint, {bool requiresAuth = true}) async {
+    try {
+      final headers = await _getHeaders(requiresAuth: requiresAuth);
+      final response = await http.delete(
+        Uri.parse('$baseUrl/$endpoint'),
+        headers: headers,
+      );
+
+      // For 204 No Content responses, return empty success response
+      if (response.statusCode == 204) {
+        return {'success': true};
+      }
+
+      return _processResponse(response);
+    } catch (e) {
+      throw Exception('Failed to perform DELETE request: $e');
+    }
   }
 }
