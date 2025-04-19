@@ -17,7 +17,9 @@ class ConversationRepository {
       if (response is List) {
         return response.map((data) => Conversation.fromJson(data)).toList();
       } else {
-        return (response as List<dynamic>).map((data) => Conversation.fromJson(data)).toList();
+        return (response as List<dynamic>)
+            .map((data) => Conversation.fromJson(data))
+            .toList();
       }
     } catch (e) {
       throw Exception('Failed to fetch conversations: $e');
@@ -27,9 +29,7 @@ class ConversationRepository {
   // Create a new conversation
   Future<Conversation> createConversation(String title) async {
     try {
-      final data = {
-        'title': title,
-      };
+      final data = {'title': title};
 
       final response = await _apiService.post('conversation', data);
       return Conversation.fromJson(response);
@@ -51,9 +51,7 @@ class ConversationRepository {
   // Update conversation title
   Future<Conversation> updateConversation(String id, String title) async {
     try {
-      final data = {
-        'title': title,
-      };
+      final data = {'title': title};
 
       final response = await _apiService.put('conversation/$id', data);
       return Conversation.fromJson(response);
@@ -74,12 +72,16 @@ class ConversationRepository {
   // Get messages for a conversation
   Future<List<Message>> getMessages(String conversationId) async {
     try {
-      final response = await _apiService.get('conversation/$conversationId/messages');
+      final response = await _apiService.get(
+        'conversation/$conversationId/messages',
+      );
 
       if (response is List) {
         return response.map((data) => Message.fromJson(data)).toList();
       } else {
-        return (response as List<dynamic>).map((data) => Message.fromJson(data)).toList();
+        return (response as List<dynamic>)
+            .map((data) => Message.fromJson(data))
+            .toList();
       }
     } catch (e) {
       throw Exception('Failed to fetch messages: $e');
@@ -87,19 +89,25 @@ class ConversationRepository {
   }
 
   // Send a message in a conversation
-  Future<List<Message>> sendMessage(String conversationId, String content, {Map<String, dynamic>? meta}) async {
+  Future<List<Message>> sendMessage(
+    String conversationId,
+    String content, {
+    Map<String, dynamic>? meta,
+  }) async {
     try {
-      final data = {
-        'content': content,
-        if (meta != null) 'meta': meta,
-      };
+      final payload = {'content': content, if (meta != null) 'meta': meta};
 
-      final response = await _apiService.post('conversation/$conversationId/messages', data);
+      final response = await _apiService.post(
+        'conversation/$conversationId/messages',
+        payload,
+      );
 
       if (response is List) {
         return response.map((data) => Message.fromJson(data)).toList();
       } else {
-        return (response as List<dynamic>).map((data) => Message.fromJson(data)).toList();
+        return (response as List<dynamic>)
+            .map((data) => Message.fromJson(data))
+            .toList();
       }
     } catch (e) {
       throw Exception('Failed to send message: $e');

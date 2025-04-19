@@ -1,48 +1,101 @@
 // lib/views/pages/chat_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:frontend/models/conversation_model.dart';
+import 'package:frontend/models/message_model.dart';
 import 'package:frontend/providers/conversation_providers.dart';
+import 'package:frontend/views/pages/previous_chats_page.dart';
 import 'package:frontend/utils/constants/colors.dart';
 import 'package:frontend/utils/constants/size.dart';
-import 'package:frontend/views/pages/previous_chats_page.dart';
-import 'package:iconsax/iconsax.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
-  final String conversationId;
-  final String initialTitle;
+  final String? initialConversationId;
+  final String? initialTitle;
 
-  const ChatPage({
-    Key? key,
-    required this.conversationId,
-    required this.initialTitle,
-  }) : super(key: key);
+  const ChatPage({Key? key, this.initialConversationId, this.initialTitle}) : super(key: key);
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
 }
 
 class _ChatPageState extends ConsumerState<ChatPage> {
+  String? _conversationId;
+  String _conversationTitle = 'New Chat';
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final FocusNode _focusNode = FocusNode();
+  bool _isCreating = false;
   bool _isSending = false;
 
   @override
   void initState() {
     super.initState();
-    // Set the current conversation
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(currentConversationProvider.notifier).state = widget.conversationId;
-    });
+    // Initialize if navigated from existing conversation
+    if (widget.initialConversationId != null) {
+      _conversationId = widget.initialConversationId;
+      _conversationTitle = widget.initialTitle ?? 'Chat';
+      ref.read(currentConversationProvider.notifier).state = _conversationId;
+    }
   }
 
   @override
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
-    _focusNode.dispose();
     super.dispose();
+  }
+
+  Future<void> _startConversation(String firstMessage) async {
+    setState(() => _isCreating = true);
+    try {
+      final convo = await ref.read(conversationsProvider.notifier)
+          .createConversation('New Conversation');
+      _conversationId = convo.id;
+      _conversationTitle = convo.title;
+      ref.read(currentConversationProvider.notifier).state = _conversationId;
+
+      await ref
+          .read(messagesProvider(_conversationId!).notifier)
+          .sendMessage(firstMessage);
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() => _isCreating = false);
+    }
+  }
+
+  Future<void> _sendMessage() async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty || _isSending) return;
+
+    if (_conversationId == null) {
+      await _startConversation(message);
+      _messageController.clear();
+      return;
+    }
+
+    setState(() => _isSending = true);
+    _messageController.clear();
+
+    try {
+      await ref
+          .read(messagesProvider(_conversationId!).notifier)
+          .sendMessage(message);
+      _scrollToBottom();
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to send message: $e')));
+    } finally {
+      setState(() => _isSending = false);
+    }
+  }
+
+  void _startNewChat() {
+    // Navigate back to previous chats
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const ChatPage()),
+    );
   }
 
   void _scrollToBottom() {
@@ -55,146 +108,39 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
-  Future<void> _sendMessage() async {
-    final message = _messageController.text.trim();
-    if (message.isEmpty || _isSending) return;
-
-    setState(() {
-      _isSending = true;
-    });
-
-    _messageController.clear();
-
-    try {
-      await ref.read(messagesProvider(widget.conversationId).notifier).sendMessage(message);
-
-      // Scroll to bottom after message is sent
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _scrollToBottom();
-      });
-    } catch (e) {
-      // Show error message
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to send message: ${e.toString()}')),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isSending = false;
-        });
-      }
-    }
-  }
-
-  void _showRenameDialog(Conversation conversation) {
-    final TextEditingController titleController = TextEditingController(text: conversation.title);
-
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xFF1A1A1C),
-        title: const Text('Rename Conversation'),
-        content: TextField(
-          controller: titleController,
-          decoration: InputDecoration(
-            hintText: 'Enter new title',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () async {
-              final newTitle = titleController.text.trim();
-              if (newTitle.isNotEmpty) {
-                Navigator.pop(context);
-                try {
-                  await ref.read(conversationsProvider.notifier).updateConversation(
-                    conversation.id,
-                    newTitle,
-                  );
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed to rename conversation: ${e.toString()}')),
-                    );
-                  }
-                }
-              }
-            },
-            child: const Text('Rename'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final messagesState = ref.watch(messagesProvider(widget.conversationId));
-    final conversationsState = ref.watch(conversationsProvider);
-
-    // Find the current conversation in the conversations list
-    Conversation? currentConversation;
-    conversationsState.whenData((conversations) {
-      currentConversation = conversations.firstWhere(
-            (conv) => conv.id == widget.conversationId,
-        orElse: () => Conversation(
-          id: widget.conversationId,
-          userId: '',
-          title: widget.initialTitle,
-          createdAt: DateTime.now(),
-          updatedAt: DateTime.now(),
-        ),
-      );
-    });
-
-    // Scroll to bottom when new messages arrive
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (messagesState is AsyncData && _scrollController.hasClients) {
-        _scrollToBottom();
-      }
-    });
+    final messagesAsync = _conversationId != null
+        ? ref.watch(messagesProvider(_conversationId!))
+        : const AsyncValue<List<Message>>.data([]);
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () {
+          onPressed: (){
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const PreviousChatsPage()),
+              MaterialPageRoute(builder: (_) => const PreviousChatsPage()),
             );
           },
         ),
-        title: currentConversation != null
-            ? Text(currentConversation!.title)
-            : Text(widget.initialTitle),
+        title: Text(_conversationTitle),
         actions: [
-          if (currentConversation != null)
+          if (_conversationId != null)
             IconButton(
-              icon: const Icon(Icons.edit),
-              onPressed: () => _showRenameDialog(currentConversation!),
+              icon: const Icon(Icons.add),
+              tooltip: 'New Chat',
+              onPressed: _startNewChat,
             ),
         ],
       ),
       body: Column(
         children: [
-          // Messages
           Expanded(
-            child: messagesState.when(
+            child: messagesAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Text('Error: ${error.toString()}'),
-              ),
+              error: (e, _) => Center(child: Text('Error: $e')),
               data: (messages) {
                 if (messages.isEmpty) {
                   return const Center(
@@ -204,17 +150,15 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     ),
                   );
                 }
-
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(TSizes.defaultSpace),
                   itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final message = messages[index];
-                    final isUser = message.sender == 'user';
-
+                  itemBuilder: (context, i) {
+                    final msg = messages[i];
+                    final isUser = msg.sender == 'user';
                     return Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
+                      padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         mainAxisAlignment: isUser
                             ? MainAxisAlignment.end
@@ -223,18 +167,20 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                           if (!isUser)
                             const CircleAvatar(
                               backgroundColor: TColors.primary,
-                              child: Icon(Iconsax.user, color: Colors.white),
+                              child: Icon(Icons.person, color: Colors.white),
                             ),
                           const SizedBox(width: 8),
                           Flexible(
                             child: Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: isUser ? TColors.primary : const Color(0xFF1A1A1C),
+                                color: isUser
+                                    ? TColors.primary
+                                    : const Color(0xFF1A1A1C),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Text(
-                                message.content,
+                                msg.content,
                                 style: TextStyle(
                                   color: isUser ? Colors.white : Colors.grey[200],
                                 ),
@@ -245,7 +191,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                           if (isUser)
                             const CircleAvatar(
                               backgroundColor: Colors.grey,
-                              child: Icon(Iconsax.user, color: Colors.white),
+                              child: Icon(Icons.person, color: Colors.white),
                             ),
                         ],
                       ),
@@ -255,10 +201,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               },
             ),
           ),
-
-          // Input
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(TSizes.defaultSpace),
             decoration: BoxDecoration(
               color: Colors.black,
               boxShadow: [
@@ -274,7 +218,6 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                 Expanded(
                   child: TextField(
                     controller: _messageController,
-                    focusNode: _focusNode,
                     decoration: InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(
@@ -301,7 +244,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                   ),
                   child: IconButton(
                     onPressed: _sendMessage,
-                    icon: _isSending
+                    icon: _isCreating || _isSending
                         ? const SizedBox(
                       width: 24,
                       height: 24,

@@ -12,15 +12,20 @@ final conversationRepositoryProvider = Provider((ref) {
 });
 
 // Conversations list state
-final conversationsProvider = StateNotifierProvider<ConversationsNotifier, AsyncValue<List<Conversation>>>((ref) {
+final conversationsProvider = StateNotifierProvider<
+  ConversationsNotifier,
+  AsyncValue<List<Conversation>>
+>((ref) {
   final conversationRepository = ref.watch(conversationRepositoryProvider);
   return ConversationsNotifier(conversationRepository);
 });
 
-class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>> {
+class ConversationsNotifier
+    extends StateNotifier<AsyncValue<List<Conversation>>> {
   final ConversationRepository _conversationRepository;
 
-  ConversationsNotifier(this._conversationRepository) : super(const AsyncValue.loading()) {
+  ConversationsNotifier(this._conversationRepository)
+    : super(const AsyncValue.loading()) {
     fetchConversations();
   }
 
@@ -36,7 +41,9 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
 
   Future<Conversation> createConversation(String title) async {
     try {
-      final newConversation = await _conversationRepository.createConversation(title);
+      final newConversation = await _conversationRepository.createConversation(
+        title,
+      );
 
       // Update state with the new conversation
       state.whenData((conversations) {
@@ -52,13 +59,15 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
 
   Future<void> updateConversation(String id, String title) async {
     try {
-      final updatedConversation = await _conversationRepository.updateConversation(id, title);
+      final updatedConversation = await _conversationRepository
+          .updateConversation(id, title);
 
       // Update state with the updated conversation
       state.whenData((conversations) {
-        final updatedList = conversations.map((conv) =>
-        conv.id == id ? updatedConversation : conv
-        ).toList();
+        final updatedList =
+            conversations
+                .map((conv) => conv.id == id ? updatedConversation : conv)
+                .toList();
         state = AsyncValue.data(updatedList);
       });
     } catch (e) {
@@ -73,7 +82,8 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
 
       // Remove the conversation from state
       state.whenData((conversations) {
-        final updatedList = conversations.where((conv) => conv.id != id).toList();
+        final updatedList =
+            conversations.where((conv) => conv.id != id).toList();
         state = AsyncValue.data(updatedList);
       });
     } catch (e) {
@@ -86,7 +96,11 @@ class ConversationsNotifier extends StateNotifier<AsyncValue<List<Conversation>>
 // Current conversation messages state
 final currentConversationProvider = StateProvider<String?>((ref) => null);
 
-final messagesProvider = StateNotifierProvider.family<MessagesNotifier, AsyncValue<List<Message>>, String>((ref, conversationId) {
+final messagesProvider = StateNotifierProvider.family<
+  MessagesNotifier,
+  AsyncValue<List<Message>>,
+  String
+>((ref, conversationId) {
   final conversationRepository = ref.watch(conversationRepositoryProvider);
   return MessagesNotifier(conversationRepository, conversationId);
 });
@@ -95,14 +109,17 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
   final ConversationRepository _conversationRepository;
   final String conversationId;
 
-  MessagesNotifier(this._conversationRepository, this.conversationId) : super(const AsyncValue.loading()) {
+  MessagesNotifier(this._conversationRepository, this.conversationId)
+    : super(const AsyncValue.loading()) {
     fetchMessages();
   }
 
   Future<void> fetchMessages() async {
     state = const AsyncValue.loading();
     try {
-      final messages = await _conversationRepository.getMessages(conversationId);
+      final messages = await _conversationRepository.getMessages(
+        conversationId,
+      );
       state = AsyncValue.data(messages);
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
@@ -111,48 +128,54 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
 
   Future<void> sendMessage(String content, {Map<String, dynamic>? meta}) async {
     try {
-      // Add optimistic user message to the UI
+      final now = DateTime.now();
       final optimisticUserMessage = Message(
-        id: 'temp-${DateTime.now().millisecondsSinceEpoch}',
+        id: 'temp-${now.millisecondsSinceEpoch}',
         conversationId: conversationId,
         sender: 'user',
-        content: content,
+        content: content.isNotEmpty ? content : '[Image]',
         meta: meta,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: now,
+        updatedAt: now,
       );
 
-      // Add loading indicator for assistant message
       final loadingAssistantMessage = Message(
-        id: 'loading-${DateTime.now().millisecondsSinceEpoch}',
+        id: 'loading-${now.millisecondsSinceEpoch}',
         conversationId: conversationId,
         sender: 'assistant',
         content: '...',
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
+        createdAt: now,
+        updatedAt: now,
       );
 
-      // Update state with optimistic messages
       state.whenData((messages) {
-        state = AsyncValue.data([...messages, optimisticUserMessage, loadingAssistantMessage]);
+        state = AsyncValue.data([
+          ...messages,
+          optimisticUserMessage,
+          loadingAssistantMessage,
+        ]);
       });
 
-      // Send actual message to API
-      final newMessages = await _conversationRepository.sendMessage(conversationId, content, meta: meta);
+      final newMessages = await _conversationRepository.sendMessage(
+        conversationId,
+        content,
+        meta: meta,
+      );
 
-      // Update state with actual response from API
       state.whenData((messages) {
-        // Remove the temporary messages
-        final filteredMessages = messages.where((msg) =>
-        msg.id != optimisticUserMessage.id && msg.id != loadingAssistantMessage.id
-        ).toList();
+        final filteredMessages =
+            messages
+                .where(
+                  (msg) =>
+                      msg.id != optimisticUserMessage.id &&
+                      msg.id != loadingAssistantMessage.id,
+                )
+                .toList();
 
-        // Add the new messages from the API
         state = AsyncValue.data([...filteredMessages, ...newMessages]);
       });
     } catch (e) {
-      // Revert optimistic update on error
-      fetchMessages();
+      fetchMessages(); // rollback optimistic UI
       rethrow;
     }
   }

@@ -6,7 +6,7 @@ import 'package:frontend/utils/constants/colors.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
-import 'package:frontend/views/pages/new_chat_page.dart';
+import 'package:frontend/views/pages/chat_page.dart';
 import 'package:frontend/views/pages/previous_chats_page.dart';
 import 'package:frontend/views/pages/profile_page.dart';
 import 'package:iconsax/iconsax.dart';
@@ -71,7 +71,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(
-            builder: (context) => const NewChatPage(),
+            builder: (context) => const ChatPage(),
           ),
               (route) => false,
         );

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/conversation_model.dart';
-import 'package:frontend/views/pages/chat_page.dart';
 import 'package:iconsax/iconsax.dart';
 
 class ConversationData {
@@ -14,58 +13,34 @@ class ConversationData {
     this.id,
   });
 
-  // Create from Conversation model
-  factory ConversationData.fromConversation(Conversation conversation) {
-    // Format the date
-    final DateTime date = conversation.updatedAt;
-    final String formattedDate = _formatDate(date);
-
-    return ConversationData(
-      date: formattedDate,
-      title: conversation.title,
-      id: conversation.id,
-    );
-  }
-
-  static String _formatDate(DateTime date) {
-    // Get day of week
-    final List<String> weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-    final String dayOfWeek = weekdays[date.weekday - 1];
-
-    // Get month
-    final List<String> months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final String month = months[date.month - 1];
-
-    return '$dayOfWeek, $month ${date.day}';
+  factory ConversationData.fromConversation(Conversation c) {
+    final dt = c.updatedAt;
+    // format date...
+    final weekdays = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    final months   = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final dayOfWeek = weekdays[dt.weekday - 1];
+    final month    = months[dt.month - 1];
+    final formatted = '$dayOfWeek, $month ${dt.day}';
+    return ConversationData(date: formatted, title: c.title, id: c.id);
   }
 }
 
 class ConversationCard extends StatelessWidget {
   final ConversationData conversationData;
+  final VoidCallback onTap;
   final VoidCallback onMenuPressed;
 
   const ConversationCard({
     Key? key,
     required this.conversationData,
+    required this.onTap,
     required this.onMenuPressed,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {
-        if (conversationData.id != null) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => ChatPage(
-                conversationId: conversationData.id!,
-                initialTitle: conversationData.title,
-              ),
-            ),
-          );
-        }
-      },
+      onTap: onTap,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
@@ -73,7 +48,7 @@ class ConversationCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
               Expanded(
@@ -82,10 +57,7 @@ class ConversationCard extends StatelessWidget {
                   children: [
                     Text(
                       conversationData.date,
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                      ),
+                      style: const TextStyle(color: Colors.grey, fontSize: 12),
                     ),
                     const SizedBox(height: 4),
                     Text(
