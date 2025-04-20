@@ -35,8 +35,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
     if (isAuthenticated && mounted) {
       Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => ProfilePage())
+        context,
+        MaterialPageRoute(builder: (context) => ProfilePage()),
       );
     }
   }
@@ -50,22 +50,22 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
           Positioned(
             top: 150,
             left: 30,
-            child: BuildDot(color:Colors.deepPurple.shade200,size: 20),
+            child: BuildDot(color: Colors.deepPurple.shade200, size: 20),
           ),
           Positioned(
             top: 200,
             right: 60,
-            child: BuildDot(color:Colors.purple, size:  15),
+            child: BuildDot(color: Colors.purple, size: 15),
           ),
           Positioned(
             bottom: 250,
             right: 40,
-            child: BuildDot(color:Colors.teal, size:18),
+            child: BuildDot(color: Colors.teal, size: 18),
           ),
           Positioned(
             bottom: 180,
             left: 60,
-            child: BuildDot(color:Colors.yellow, size:  16),
+            child: BuildDot(color: Colors.yellow, size: 16),
           ),
 
           // Main content
@@ -75,7 +75,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 200),
+                  const SizedBox(height: 150),
 
                   // App logo
                   Image(height: 160, image: AssetImage(TImages.logo)),
@@ -122,8 +122,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => LoginPage())
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -149,8 +149,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                   ElevatedButton(
                     onPressed: () {
                       Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => SignupPage())
+                        context,
+                        MaterialPageRoute(builder: (context) => SignupPage()),
                       );
                     },
                     style: ElevatedButton.styleFrom(

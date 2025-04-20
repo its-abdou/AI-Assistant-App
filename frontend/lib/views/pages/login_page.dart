@@ -7,12 +7,8 @@ import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
 import 'package:frontend/views/pages/chat_page.dart';
-import 'package:frontend/views/pages/previous_chats_page.dart';
-import 'package:frontend/views/pages/profile_page.dart';
-import 'package:frontend/views/widgets/form_divider.dart';
-import 'package:iconsax/iconsax.dart';
 
-import '../widgets/google_sign_in_button.dart';
+import 'package:iconsax/iconsax.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
   const LoginPage({super.key});
@@ -188,11 +184,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                   ),
                 ),
               ),
-
-              //Divider
-              FormDivider(),
-              SizedBox(height: TSizes.spaceBtwSections),
-              GoogleSignInButton(onPressed: () {}),
             ],
           ),
         ),

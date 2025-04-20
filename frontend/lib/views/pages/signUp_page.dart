@@ -7,12 +7,10 @@ import 'package:frontend/utils/constants/size.dart';
 import 'package:frontend/utils/constants/text_strings.dart';
 import 'package:frontend/utils/themes/text_thems.dart';
 import 'package:frontend/views/pages/chat_page.dart';
-import 'package:frontend/views/pages/previous_chats_page.dart';
-import 'package:frontend/views/pages/profile_page.dart';
+
 import 'package:iconsax/iconsax.dart';
 
 import '../widgets/form_divider.dart';
-import '../widgets/google_sign_in_button.dart';
 
 class SignupPage extends ConsumerStatefulWidget {
   const SignupPage({super.key});
@@ -60,20 +58,20 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     });
 
     try {
-      await ref.read(authProvider.notifier).signup(
-        controllerName.text.trim(),
-        controllerEmail.text.trim(),
-        controllerPass.text,
-      );
+      await ref
+          .read(authProvider.notifier)
+          .signup(
+            controllerName.text.trim(),
+            controllerEmail.text.trim(),
+            controllerPass.text,
+          );
 
       // On successful signup, navigate to profile page
       if (mounted) {
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (context) => const ChatPage(),
-          ),
-              (route) => false,
+          MaterialPageRoute(builder: (context) => const ChatPage()),
+          (route) => false,
         );
       }
     } catch (e) {
@@ -152,26 +150,50 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                       Row(
                         children: [
                           SizedBox(
-                            width:24,
+                            width: 24,
                             height: 24,
-                            child:  Checkbox(
+                            child: Checkbox(
                               value: isChecked,
                               activeColor: TColors.primary,
                               onChanged:
                                   (bool? value) => setState(() {
-                                isChecked = value;
-                              }),
+                                    isChecked = value;
+                                  }),
                             ),
                           ),
                           SizedBox(width: TSizes.spaceBtwItems),
                           Text.rich(
-                              TextSpan(children: [
-                                TextSpan(text: '${TTexts.iAgreeTo} ', style: TTextTheme.darkTextTheme.bodySmall),
-                                TextSpan(text: '${TTexts.privacyPolicy}', style: TTextTheme.darkTextTheme.bodyMedium!.apply(color: TColors.white, decoration: TextDecoration.underline, decorationColor: TColors.white)),
+                            TextSpan(
+                              children: [
+                                TextSpan(
+                                  text: '${TTexts.iAgreeTo} ',
+                                  style: TTextTheme.darkTextTheme.bodySmall,
+                                ),
+                                TextSpan(
+                                  text: '${TTexts.privacyPolicy}',
+                                  style: TTextTheme.darkTextTheme.bodyMedium!
+                                      .apply(
+                                        color: TColors.white,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: TColors.white,
+                                      ),
+                                ),
 
-                                TextSpan(text: '  ${TTexts.and} ', style: TTextTheme.darkTextTheme.bodySmall),
-                                TextSpan(text: '${TTexts.termsOfUse}', style: TTextTheme.darkTextTheme.bodyMedium!.apply(color: TColors.white, decoration: TextDecoration.underline, decorationColor: TColors.white)),
-                              ])
+                                TextSpan(
+                                  text: '  ${TTexts.and} ',
+                                  style: TTextTheme.darkTextTheme.bodySmall,
+                                ),
+                                TextSpan(
+                                  text: '${TTexts.termsOfUse}',
+                                  style: TTextTheme.darkTextTheme.bodyMedium!
+                                      .apply(
+                                        color: TColors.white,
+                                        decoration: TextDecoration.underline,
+                                        decorationColor: TColors.white,
+                                      ),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
@@ -207,19 +229,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                                 TSizes.buttonRadius,
                               ),
                             ),
-
                           ),
-                          child: _isLoading
-                              ? CircularProgressIndicator(color: Colors.white)
-                              : Text(TTexts.createAccount),
+                          child:
+                              _isLoading
+                                  ? CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
+                                  : Text(TTexts.createAccount),
                         ),
-                      ),
-                      SizedBox(height: TSizes.spaceBtwSections),
-                      FormDivider(),
-                      SizedBox(height: TSizes.spaceBtwSections),
-                      GoogleSignInButton(
-                        onPressed: () {
-                        },
                       ),
                     ],
                   ),
