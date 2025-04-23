@@ -39,11 +39,10 @@ class messageController {
     try {
       let conversation;
 
-      // 🔁 Step 1: If no conversationId, create new one (lazy init)
       if (!conversationId || conversationId === "new") {
         conversation = await Conversation.create({
           userId: req.user.id,
-          title: "Temporary...", // Will update after assistant replies
+          title: "Temporary...",
         });
         conversationId = conversation._id;
       } else {
@@ -55,7 +54,6 @@ class messageController {
           return res.status(404).json({ message: "Conversation not found" });
       }
 
-      // 🧠 Step 2: Save user message
       const userMessage = new Message({
         conversationId,
         sender: "user",
@@ -68,15 +66,16 @@ class messageController {
         createdAt: 1,
       });
 
-      // Process messages and handle image encoding
       const formattedMessages = [];
+      let userImageUrl = null;
+
       for (const msg of history) {
         if (msg.sender === "assistant") {
           formattedMessages.push({ role: "assistant", content: msg.content });
         } else if (msg.meta?.imageUrl) {
           try {
-            // Download and encode the image to base64
             const base64Image = await getBase64FromUrl(msg.meta.imageUrl);
+            userImageUrl = msg.meta.imageUrl; // Store the latest user image URL
 
             formattedMessages.push({
               role: "user",
@@ -87,7 +86,6 @@ class messageController {
             });
           } catch (imageError) {
             console.error("Image processing failed:", imageError);
-            // Fallback to text-only message if image processing fails
             formattedMessages.push({ role: "user", content: msg.content });
           }
         } else {
@@ -95,7 +93,6 @@ class messageController {
         }
       }
 
-      // 🤖 Step 3: Get assistant reply
       const response = await client.path("/chat/completions").post({
         body: {
           model,
@@ -111,15 +108,19 @@ class messageController {
 
       const assistantReply = response.body.choices[0].message.content;
 
-      // 💾 Step 4: Save assistant reply
+      // Create metadata for the assistant message to preserve image context
+      const assistantMeta = userImageUrl
+        ? { referenceImageUrl: userImageUrl }
+        : null;
+
       const assistantMessage = new Message({
         conversationId,
         sender: "assistant",
         content: assistantReply,
+        meta: assistantMeta,
       });
       await assistantMessage.save();
 
-      // 🏷️ Step 5: Auto-generate title if this is the first assistant reply
       const messageCount = await Message.countDocuments({ conversationId });
       if (messageCount <= 2) {
         const title = await generateTitleFromMessages(content, assistantReply);

@@ -1,5 +1,5 @@
-// lib/providers/conversation_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 import '../repositories/conversation_repository.dart';
@@ -132,15 +132,22 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
     }
   }
 
-  Future<void> sendMessage(String content, {Map<String, dynamic>? meta}) async {
+  Future<void> sendMessage(String content, {XFile? image}) async {
     try {
       final now = DateTime.now();
+
+      // Create metadata for display in UI
+      Map<String, dynamic>? displayMeta;
+      if (image != null) {
+        displayMeta = {'image': image.path}; // Local path for optimistic UI
+      }
+
       final optimisticUserMessage = Message(
         id: 'temp-${now.millisecondsSinceEpoch}',
         conversationId: conversationId,
         sender: 'user',
         content: content.isNotEmpty ? content : '[Image]',
-        meta: meta,
+        meta: displayMeta,
         createdAt: now,
         updatedAt: now,
       );
@@ -154,6 +161,7 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
         updatedAt: now,
       );
 
+      // Update UI with optimistic messages
       state.whenData((messages) {
         state = AsyncValue.data([
           ...messages,
@@ -162,12 +170,14 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
         ]);
       });
 
+      // Send message to API
       final newMessages = await _conversationRepository.sendMessage(
         conversationId,
         content,
-        meta: meta,
+        image: image,
       );
 
+      // Update state with real messages
       state.whenData((messages) {
         final filteredMessages =
             messages

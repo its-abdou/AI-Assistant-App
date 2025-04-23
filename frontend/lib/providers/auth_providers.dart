@@ -5,7 +5,7 @@ import '../repositories/auth_repository.dart';
 import '../services/api_service.dart';
 
 // Environment configuration - replace with your backend URL
-final apiUrlProvider = Provider((ref) => 'http://192.168.26.94:3000/api/v1');
+final apiUrlProvider = Provider((ref) => 'http://10.0.2.2:3000/api/v1');
 
 // API Service provider
 final apiServiceProvider = Provider((ref) {

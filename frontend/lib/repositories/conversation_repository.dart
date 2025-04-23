@@ -1,8 +1,11 @@
-// lib/repositories/conversation_repository.dart
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
+
 import '../models/conversation_model.dart';
 import '../models/message_model.dart';
 import '../services/api_service.dart';
-import 'dart:convert';
 
 class ConversationRepository {
   final ApiService _apiService;
@@ -88,14 +91,31 @@ class ConversationRepository {
     }
   }
 
+  // Convert image to base64
+  Future<String> imageToBase64(XFile image) async {
+    final bytes = await image.readAsBytes();
+    return base64Encode(bytes);
+  }
+
   // Send a message in a conversation
   Future<List<Message>> sendMessage(
     String conversationId,
     String content, {
-    Map<String, dynamic>? meta,
+    XFile? image,
   }) async {
     try {
-      final payload = {'content': content, if (meta != null) 'meta': meta};
+      Map<String, dynamic> meta = {};
+
+      // If we have an image, convert it to base64 and add to meta
+      if (image != null) {
+        final base64Image = await imageToBase64(image);
+        // Create a data URL that our backend can process
+        final imageUrl =
+            'data:image/${image.name.split('.').last};base64,$base64Image';
+        meta['imageUrl'] = imageUrl;
+      }
+
+      final payload = {'content': content, if (meta.isNotEmpty) 'meta': meta};
 
       final response = await _apiService.post(
         'conversation/$conversationId/messages',
