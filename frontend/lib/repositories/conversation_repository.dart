@@ -99,10 +99,10 @@ class ConversationRepository {
 
   // Send a message in a conversation
   Future<List<Message>> sendMessage(
-    String conversationId,
-    String content, {
-    XFile? image,
-  }) async {
+      String conversationId,
+      String content, {
+        XFile? image,
+      }) async {
     try {
       Map<String, dynamic> meta = {};
 
@@ -122,12 +122,15 @@ class ConversationRepository {
         payload,
       );
 
-      if (response is List) {
-        return response.map((data) => Message.fromJson(data)).toList();
-      } else {
-        return (response as List<dynamic>)
+      // Handle the specific response structure from the backend
+      if (response is Map && response.containsKey('messages')) {
+        return (response['messages'] as List<dynamic>)
             .map((data) => Message.fromJson(data))
             .toList();
+      } else if (response is List) {
+        return response.map((data) => Message.fromJson(data)).toList();
+      } else {
+        throw Exception('Unexpected response format');
       }
     } catch (e) {
       throw Exception('Failed to send message: $e');

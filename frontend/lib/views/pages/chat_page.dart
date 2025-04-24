@@ -8,13 +8,15 @@ import 'package:frontend/utils/constants/colors.dart';
 import 'package:frontend/utils/constants/size.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'dart:convert';
+import 'dart:typed_data';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String? initialConversationId;
   final String? initialTitle;
 
   const ChatPage({Key? key, this.initialConversationId, this.initialTitle})
-    : super(key: key);
+      : super(key: key);
 
   @override
   ConsumerState<ChatPage> createState() => _ChatPageState();
@@ -170,6 +172,14 @@ class _ChatPageState extends ConsumerState<ChatPage> {
     }
   }
 
+  // Helper function to convert base64 to Uint8List
+  Uint8List _base64ToBytes(String base64Image) {
+    // Extract the actual base64 content from the data URL
+    final split = base64Image.split(',');
+    final bytes = base64Decode(split.length > 1 ? split[1] : split[0]);
+    return bytes;
+  }
+
   Widget _buildImagePreview() {
     if (_selectedImage == null) return const SizedBox.shrink();
 
@@ -217,18 +227,25 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   }
 
   Widget _buildMessageImage(
-    String? imagePath,
-    bool isNetworkImage,
-    Message message,
-  ) {
+      String? imagePath,
+      bool isNetworkImage,
+      Message message,
+      ) {
     if (imagePath == null) {
       if (message.meta != null && message.meta!['referenceImageUrl'] != null) {
         imagePath = message.meta!['referenceImageUrl'];
+        isNetworkImage = true;
+      } else if (message.meta != null && message.meta!['imageUrl'] != null) {
+        imagePath = message.meta!['imageUrl'];
         isNetworkImage = true;
       } else {
         return const SizedBox.shrink();
       }
     }
+
+    // Check if the image is a base64 data URL
+    final isBase64Image = imagePath!.startsWith('data:image');
+
     return Container(
       constraints: const BoxConstraints(
         maxHeight: 200,
@@ -237,50 +254,62 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       margin: const EdgeInsets.only(bottom: 8),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
-        child:
-            isNetworkImage
-                ? Image.network(
-                  imagePath!,
-                  fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 150,
-                      color: Colors.grey[800],
-                      child: Center(
-                        child: CircularProgressIndicator(
-                          value:
-                              loadingProgress.expectedTotalBytes != null
-                                  ? loadingProgress.cumulativeBytesLoaded /
-                                      loadingProgress.expectedTotalBytes!
-                                  : null,
-                        ),
-                      ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(Icons.error, color: Colors.red),
-                      ),
-                    );
-                  },
-                )
-                : Image.file(
-                  File(imagePath!),
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) {
-                    return Container(
-                      height: 150,
-                      color: Colors.grey[800],
-                      child: const Center(
-                        child: Icon(Icons.error, color: Colors.red),
-                      ),
-                    );
-                  },
+        child: isBase64Image
+            ? Image.memory(
+          _base64ToBytes(imagePath),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 150,
+              color: Colors.grey[800],
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red),
+              ),
+            );
+          },
+        )
+            : isNetworkImage
+            ? Image.network(
+          imagePath,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, loadingProgress) {
+            if (loadingProgress == null) return child;
+            return Container(
+              height: 150,
+              color: Colors.grey[800],
+              child: Center(
+                child: CircularProgressIndicator(
+                  value: loadingProgress.expectedTotalBytes != null
+                      ? loadingProgress.cumulativeBytesLoaded /
+                      loadingProgress.expectedTotalBytes!
+                      : null,
                 ),
+              ),
+            );
+          },
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 150,
+              color: Colors.grey[800],
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red),
+              ),
+            );
+          },
+        )
+            : Image.file(
+          File(imagePath),
+          fit: BoxFit.cover,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              height: 150,
+              color: Colors.grey[800],
+              child: const Center(
+                child: Icon(Icons.error, color: Colors.red),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -288,9 +317,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync =
-        _conversationId != null
-            ? ref.watch(messagesProvider(_conversationId!))
-            : const AsyncValue<List<Message>>.data([]);
+    _conversationId != null
+        ? ref.watch(messagesProvider(_conversationId!))
+        : const AsyncValue<List<Message>>.data([]);
 
     return Scaffold(
       appBar: AppBar(
@@ -366,9 +395,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: Row(
                         mainAxisAlignment:
-                            isUser
-                                ? MainAxisAlignment.end
-                                : MainAxisAlignment.start,
+                        isUser
+                            ? MainAxisAlignment.end
+                            : MainAxisAlignment.start,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (!isUser)
@@ -382,9 +411,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
                                 color:
-                                    isUser
-                                        ? TColors.primary
-                                        : const Color(0xFF1A1A1C),
+                                isUser
+                                    ? TColors.primary
+                                    : const Color(0xFF1A1A1C),
                                 borderRadius: BorderRadius.circular(16),
                               ),
                               child: Column(
@@ -392,8 +421,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                 children: [
                                   if (imagePath != null ||
                                       (msg.meta != null &&
-                                          msg.meta!['referenceImageUrl'] !=
-                                              null))
+                                          (msg.meta!['referenceImageUrl'] != null ||
+                                              msg.meta!['imageUrl'] != null)))
                                     _buildMessageImage(
                                       imagePath,
                                       isNetworkImage,
@@ -405,9 +434,9 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                                       msg.content,
                                       style: TextStyle(
                                         color:
-                                            isUser
-                                                ? Colors.white
-                                                : Colors.grey[200],
+                                        isUser
+                                            ? Colors.white
+                                            : Colors.grey[200],
                                       ),
                                     ),
                                 ],
@@ -465,36 +494,36 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       },
                       itemBuilder:
                           (context) => [
-                            const PopupMenuItem(
-                              value: 'camera',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.camera_alt),
-                                  SizedBox(width: 8),
-                                  Text('Take Photo'),
-                                ],
-                              ),
-                            ),
-                            const PopupMenuItem(
-                              value: 'gallery',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.image),
-                                  SizedBox(width: 8),
-                                  Text('Choose from Gallery'),
-                                ],
-                              ),
-                            ),
-                          ],
+                        const PopupMenuItem(
+                          value: 'camera',
+                          child: Row(
+                            children: [
+                              Icon(Icons.camera_alt),
+                              SizedBox(width: 8),
+                              Text('Take Photo'),
+                            ],
+                          ),
+                        ),
+                        const PopupMenuItem(
+                          value: 'gallery',
+                          child: Row(
+                            children: [
+                              Icon(Icons.image),
+                              SizedBox(width: 8),
+                              Text('Choose from Gallery'),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                     Expanded(
                       child: TextField(
                         controller: _messageController,
                         decoration: InputDecoration(
                           hintText:
-                              _selectedImage != null
-                                  ? 'Add a caption (optional)...'
-                                  : 'Type a message...',
+                          _selectedImage != null
+                              ? 'Add a caption (optional)...'
+                              : 'Type a message...',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(24),
                             borderSide: BorderSide.none,
@@ -519,18 +548,18 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       ),
                       child: IconButton(
                         onPressed:
-                            _isCreating || _isSending ? null : _sendMessage,
+                        _isCreating || _isSending ? null : _sendMessage,
                         icon:
-                            _isCreating || _isSending
-                                ? const SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                                : const Icon(Icons.send, color: Colors.white),
+                        _isCreating || _isSending
+                            ? const SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                            : const Icon(Icons.send, color: Colors.white),
                       ),
                     ),
                   ],

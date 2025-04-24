@@ -13,8 +13,8 @@ final conversationRepositoryProvider = Provider((ref) {
 
 // Conversations list state
 final conversationsProvider = StateNotifierProvider<
-  ConversationsNotifier,
-  AsyncValue<List<Conversation>>
+    ConversationsNotifier,
+    AsyncValue<List<Conversation>>
 >((ref) {
   final conversationRepository = ref.watch(conversationRepositoryProvider);
   return ConversationsNotifier(conversationRepository);
@@ -25,7 +25,7 @@ class ConversationsNotifier
   final ConversationRepository _conversationRepository;
 
   ConversationsNotifier(this._conversationRepository)
-    : super(const AsyncValue.loading()) {
+      : super(const AsyncValue.loading()) {
     fetchConversations();
   }
 
@@ -66,9 +66,9 @@ class ConversationsNotifier
       final currentState = state;
       if (currentState is AsyncData<List<Conversation>>) {
         final updatedList =
-            currentState.value
-                .map((conv) => conv.id == id ? updatedConversation : conv)
-                .toList();
+        currentState.value
+            .map((conv) => conv.id == id ? updatedConversation : conv)
+            .toList();
         state = AsyncValue.data(updatedList);
       } else {
         // If state is not in data state, fetch conversations to refresh
@@ -87,7 +87,7 @@ class ConversationsNotifier
       final currentState = state;
       if (currentState is AsyncData<List<Conversation>>) {
         final updatedList =
-            currentState.value.where((conv) => conv.id != id).toList();
+        currentState.value.where((conv) => conv.id != id).toList();
         state = AsyncValue.data(updatedList);
       } else {
         // If state is not in data state, fetch conversations to refresh
@@ -103,9 +103,9 @@ class ConversationsNotifier
 final currentConversationProvider = StateProvider<String?>((ref) => null);
 
 final messagesProvider = StateNotifierProvider.family<
-  MessagesNotifier,
-  AsyncValue<List<Message>>,
-  String
+    MessagesNotifier,
+    AsyncValue<List<Message>>,
+    String
 >((ref, conversationId) {
   final conversationRepository = ref.watch(conversationRepositoryProvider);
   return MessagesNotifier(conversationRepository, conversationId);
@@ -116,7 +116,7 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
   final String conversationId;
 
   MessagesNotifier(this._conversationRepository, this.conversationId)
-    : super(const AsyncValue.loading()) {
+      : super(const AsyncValue.loading()) {
     fetchMessages();
   }
 
@@ -177,18 +177,20 @@ class MessagesNotifier extends StateNotifier<AsyncValue<List<Message>>> {
         image: image,
       );
 
-      // Update state with real messages
+      // Update state with real messages, ensuring we don't lose any previous messages
       state.whenData((messages) {
-        final filteredMessages =
-            messages
-                .where(
-                  (msg) =>
-                      msg.id != optimisticUserMessage.id &&
-                      msg.id != loadingAssistantMessage.id,
-                )
-                .toList();
+        final filteredMessages = messages
+            .where((msg) =>
+        msg.id != optimisticUserMessage.id &&
+            msg.id != loadingAssistantMessage.id)
+            .toList();
 
-        state = AsyncValue.data([...filteredMessages, ...newMessages]);
+        // Make sure we keep any existing messages
+        final messagesToAdd = newMessages.where((newMsg) {
+          return !filteredMessages.any((msg) => msg.id == newMsg.id);
+        }).toList();
+
+        state = AsyncValue.data([...filteredMessages, ...messagesToAdd]);
       });
     } catch (e) {
       fetchMessages(); // rollback optimistic UI
